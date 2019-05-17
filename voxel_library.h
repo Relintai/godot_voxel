@@ -9,6 +9,7 @@ class VoxelLibrary : public Resource {
 
 public:
 	static const unsigned int MAX_VOXEL_TYPES = 256; // Required limit because voxel types are stored in 8 bits
+	static const unsigned int ITEMS_PER_PAGE = 256; //TODO fix saving items that are not on the currently active page
 
 	VoxelLibrary();
 	~VoxelLibrary();
@@ -16,28 +17,34 @@ public:
 	int get_atlas_size() const { return _atlas_size; }
 	void set_atlas_size(int s);
 
-	// Use this factory rather than creating voxels from scratch
 	Ref<Voxel> create_voxel(int id, String name);
+
+	void add_voxel(Ref<Voxel> voxel);
+	void set_voxel(int id, Ref<Voxel> voxel);
+	Ref<Voxel> get_voxel(int id);
+	void remove_voxel(int id);
 
 	int get_voxel_count() const;
 
 	void load_default();
 
-	// Internal getters
+	int get_voxel_editor_count();
+	void set_voxel_editor_count(int value);
+
+	int get_voxel_editor_page();
+	void set_voxel_editor_page(int value);
 
 	_FORCE_INLINE_ bool has_voxel(int id) const { return _voxel_types[id].is_valid(); }
 	_FORCE_INLINE_ const Voxel &get_voxel_const(int id) const { return **_voxel_types[id]; }
 
 protected:
+	void _validate_property(PropertyInfo &property) const;
 	static void _bind_methods();
 
-	bool _set(const StringName &p_name, const Variant &p_value);
-	bool _get(const StringName &p_name, Variant &r_ret) const;
-	void _get_property_list(List<PropertyInfo> *p_list) const;
-
-	Ref<Voxel> _get_voxel_bind(int id);
-
 private:
+	int _voxel_editor_count;
+	int _voxel_editor_page;
+
 	Ref<Voxel> _voxel_types[MAX_VOXEL_TYPES];
 	int _atlas_size;
 };
