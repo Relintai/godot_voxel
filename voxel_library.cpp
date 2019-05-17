@@ -6,6 +6,14 @@ VoxelLibrary::VoxelLibrary() :
 
 	_voxel_editor_count = 0;
 	_voxel_editor_page = 0;
+
+	_atlas_rows = 8;
+	_atlas_columns = 8;
+	_is_textured = true;
+
+	_uvs = memnew(Vector<Vector<Vector2> >());
+
+	//rebuild_uvs();
 }
 
 VoxelLibrary::~VoxelLibrary() {
@@ -15,6 +23,10 @@ VoxelLibrary::~VoxelLibrary() {
 	//			_voxel_types[i]->set_library(NULL);
 	//		}
 	//	}
+
+	_uvs->clear();
+
+	memdelete(_uvs);
 }
 
 int VoxelLibrary::get_voxel_count() const {
@@ -100,6 +112,58 @@ void VoxelLibrary::remove_voxel(int id) {
 	_voxel_types[id] = Ref<Voxel>(NULL);
 }
 
+void VoxelLibrary::rebuild_uvs() {
+	float material_width = (float)1 / (float)(get_atlas_columns());
+	float material_height = (float)1 / (float)(get_atlas_rows());
+
+	_uvs->clear();
+
+	for (float num2 = (float)0; num2 < (float)1; num2 += material_height) {
+		for (float num3 = (float)0; num3 < (float)1; num3 += material_width) {
+			_uvs->push_back(get_uvs_test(num3, num2, material_width, material_height));
+		}
+	}
+}
+
+Vector<Vector2> VoxelLibrary::get_material_uv(int ID) {
+	if (_is_textured) {
+		return (*_uvs)[ID];
+	}
+
+	return get_uvs_test((float)0, (float)0, (float)1, (float)1);
+}
+
+Vector<Vector2> VoxelLibrary::get_uvs_test(float x, float y, float w, float h) {
+
+	Vector<Vector2> v;
+
+	v.push_back(Vector2(x + w, y));
+	v.push_back(Vector2(x + w, y + h));
+	v.push_back(Vector2(x, y + h));
+	v.push_back(Vector2(x, y));
+
+	return v;
+}
+
+void VoxelLibrary::set_atlas_columns(int s) {
+	ERR_FAIL_COND(s <= 0);
+	_atlas_columns = s;
+}
+
+void VoxelLibrary::set_atlas_rows(int s) {
+	ERR_FAIL_COND(s <= 0);
+	_atlas_rows = s;
+}
+
+bool VoxelLibrary::get_is_textured() const {
+	return _is_textured;
+}
+
+void VoxelLibrary::set_is_textured(bool value) {
+	_is_textured = value;
+}
+
+
 void VoxelLibrary::_validate_property(PropertyInfo &property) const {
 	String prop = property.name;
 	if (prop.begins_with("Voxel_")) {
@@ -116,9 +180,23 @@ void VoxelLibrary::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_atlas_size", "square_size"), &VoxelLibrary::set_atlas_size);
 	ClassDB::bind_method(D_METHOD("get_atlas_size"), &VoxelLibrary::get_atlas_size);
-
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "atlas_size"), "set_atlas_size", "get_atlas_size");
 
+	ClassDB::bind_method(D_METHOD("get_atlas_columns"), &VoxelLibrary::get_atlas_columns);
+	ClassDB::bind_method(D_METHOD("set_atlas_columns", "value"), &VoxelLibrary::set_atlas_columns);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "atlas_columns"), "set_atlas_columns", "get_atlas_columns");
+
+	ClassDB::bind_method(D_METHOD("get_atlas_rows"), &VoxelLibrary::get_atlas_rows);
+	ClassDB::bind_method(D_METHOD("set_atlas_rows", "value"), &VoxelLibrary::set_atlas_rows);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "atlas_rows"), "set_atlas_rows", "get_atlas_rows");
+
+	ClassDB::bind_method(D_METHOD("get_is_textured"), &VoxelLibrary::get_is_textured);
+	ClassDB::bind_method(D_METHOD("set_is_textured", "value"), &VoxelLibrary::set_is_textured);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_textured"), "set_is_textured", "get_is_textured");
+
+	ClassDB::bind_method(D_METHOD("get_material"), &VoxelLibrary::get_material);
+	ClassDB::bind_method(D_METHOD("set_material", "value"), &VoxelLibrary::set_material);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "material", PROPERTY_HINT_RESOURCE_TYPE, "Material"), "set_material", "get_material");
 
 	ClassDB::bind_method(D_METHOD("get_voxel_editor_count"), &VoxelLibrary::get_voxel_editor_count);
 	ClassDB::bind_method(D_METHOD("set_voxel_editor_count", "value"), &VoxelLibrary::set_voxel_editor_count);

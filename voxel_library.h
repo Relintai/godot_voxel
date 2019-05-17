@@ -4,6 +4,8 @@
 #include "voxel.h"
 #include <core/resource.h>
 
+#include "scene/resources/material.h"
+
 class VoxelLibrary : public Resource {
 	GDCLASS(VoxelLibrary, Resource)
 
@@ -37,6 +39,23 @@ public:
 	_FORCE_INLINE_ bool has_voxel(int id) const { return _voxel_types[id].is_valid(); }
 	_FORCE_INLINE_ const Voxel &get_voxel_const(int id) const { return **_voxel_types[id]; }
 
+	//Atlas
+	int get_atlas_columns() const { return _atlas_columns; }
+	void set_atlas_columns(int s);
+
+	int get_atlas_rows() const { return _atlas_rows; }
+	void set_atlas_rows(int s);
+
+	bool get_is_textured() const;
+	void set_is_textured(bool s);
+
+	Ref<Material> get_material() const { return _material; }
+	void set_material(Ref<Material> mat) { _material = mat; }
+
+	void rebuild_uvs();
+	Vector<Vector2> get_material_uv(int ID);
+	static Vector<Vector2> get_uvs_test(float x, float y, float w, float h);
+
 protected:
 	void _validate_property(PropertyInfo &property) const;
 	static void _bind_methods();
@@ -46,6 +65,16 @@ private:
 	int _voxel_editor_page;
 
 	Ref<Voxel> _voxel_types[MAX_VOXEL_TYPES];
+
+	//atlas
+	int _atlas_columns;
+	int _atlas_rows;
+	bool _is_textured;
+
+	Vector<Vector<Vector2> > *_uvs;
+
+	Ref<Material> _material;
+
 	int _atlas_size;
 };
 
